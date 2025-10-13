@@ -191,7 +191,7 @@ if submit_button:
                 merged_features = merge_features_without_duplicates(rdkit_features, mordred_features)
 
                 # 构造输入并压平
-                data = merged_features.loc[:, ['ATS0se', 'EState_VSA5', 'ATSC0dv']]
+                data = merged_features.loc[:, ['ATS0s', 'PEOE_VSA6', 'SssCH2']]
 
                 # 创建输入数据表 - 使用新的特征
                 input_data = {
@@ -254,6 +254,7 @@ if submit_button:
             
 
                
+
 
 
 
