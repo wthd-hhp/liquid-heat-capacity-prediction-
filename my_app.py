@@ -5,7 +5,7 @@ from rdkit.Chem.Draw import MolDraw2DSVG
 from rdkit.ML.Descriptors import MoleculeDescriptors
 from mordred import Calculator, descriptors
 import pandas as pd
-from autogluon.tabular import TabularPredictor
+
 import numpy as np
 import gc
 import re
@@ -254,4 +254,5 @@ if submit_button:
             
 
                
+
 
