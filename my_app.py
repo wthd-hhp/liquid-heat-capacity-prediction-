@@ -67,7 +67,7 @@ smiles = st.text_input(
 submit_button = st.button("Submit and Predict")
 
 # 模型特征（与你的 AutoGluon 模型保持一致）
-required_descriptors = ["ATS0se", "EState_VSA5", "ATSC0dv"]
+required_descriptors = ["ATS0s", "PEOE_VSA6", "SssCH2"]
 
 # ---------------- 模型加载 ----------------
 @st.cache_resource(show_spinner=False, max_entries=1)
@@ -196,9 +196,9 @@ if submit_button:
                 # 创建输入数据表 - 使用新的特征
                 input_data = {
                     "SMILES": [smiles],
-                    'ATS0se': [data.iloc[0]['ATS0se']], 
-                    'EState_VSA5': [data.iloc[0]['EState_VSA5']], 
-                    'ATSC0dv': [data.iloc[0]['ATSC0dv']]
+                    'ATS0s': [data.iloc[0]['ATS0s']], 
+                    'PEOE_VSA6': [data.iloc[0]['PEOE_VSA6']], 
+                    'SssCH2': [data.iloc[0]['SssCH2']]
                 }
             
                 input_df = pd.DataFrame(input_data)
@@ -209,9 +209,9 @@ if submit_button:
 
                 # 创建预测用数据框 - 使用新的特征
                 predict_df = pd.DataFrame({
-                    'ATS0se': [data.iloc[0]['ATS0se']], 
-                    'EState_VSA5': [data.iloc[0]['EState_VSA5']], 
-                    'ATSC0dv': [data.iloc[0]['ATSC0dv']]
+                    'ATS0s': [data.iloc[0]['ATS0s']], 
+                    'PEOE_VSA6': [data.iloc[0]['PEOE_VSA6']], 
+                    'SssCH2': [data.iloc[0]['SssCH2']]
                 })
                 
                 # 加载模型并预测
@@ -254,6 +254,7 @@ if submit_button:
             
 
                
+
 
 
 
