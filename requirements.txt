@@ -9,3 +9,4 @@ pillow==10.4.0  # 显式指定兼容版本
 mordred
 #git+https://github.com/mordred-descriptor/mordred.git
 
+
