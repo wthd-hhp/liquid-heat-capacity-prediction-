@@ -14,7 +14,7 @@ import traceback
 import os
 import tempfile
 import torch
-
+from chemprop.args import PredictArgs
 # ---------------- 页面样式 ----------------
 st.markdown(
     """
@@ -286,6 +286,7 @@ if submit_button:
             
 
                
+
 
 
 
