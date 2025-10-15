@@ -93,14 +93,16 @@ def chemprop_predict(smiles_list):
         pd.DataFrame({"smiles": smiles_list}).to_csv(temp_input.name, index=False)
         temp_output = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
 
-        # 调用 Chemprop 预测
-        args = [
+         # ✅ 使用 PredictArgs 创建参数对象（新版本 chemprop 需要这样）
+        args = PredictArgs().parse_args([
             "--test_path", temp_input.name,
             "--checkpoint_dir", chemprop_dir,
             "--preds_path", temp_output.name,
-            "--no_cuda" if not torch.cuda.is_available() else ""  # 自动切换 GPU / CPU
-        ]
-        args = [a for a in args if a != ""]  # 去除空参数
+        ])
+
+        # 若无 GPU，则强制禁用 CUDA
+        if not torch.cuda.is_available():
+            args.no_cuda = True
 
         with st.spinner("Running Chemprop (GNN) prediction..."):
             make_predictions(args=args)
@@ -284,6 +286,7 @@ if submit_button:
             
 
                
+
 
 
 
