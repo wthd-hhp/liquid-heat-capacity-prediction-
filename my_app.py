@@ -117,6 +117,20 @@ def chemprop_predict(smiles_list):
     except Exception as e:
         raise RuntimeError(f"Chemprop prediction failed: {str(e)}")
 
+if "chemprop_loaded" not in st.session_state:
+    st.session_state["chemprop_loaded"] = False
+
+use_gnn = st.checkbox("🔬 Use Chemprop GNN model (may load slowly)", value=False)
+
+if use_gnn and not st.session_state["chemprop_loaded"]:
+    try:
+        import torch
+        from chemprop.train import make_predictions
+        from chemprop.args import PredictArgs
+        st.session_state["chemprop_loaded"] = True
+        st.success("✅ Chemprop model ready!")
+    except Exception as e:
+        st.error(f"Chemprop loading failed: {e}")
 
 
 
@@ -286,6 +300,7 @@ if submit_button:
             
 
                
+
 
 
 
