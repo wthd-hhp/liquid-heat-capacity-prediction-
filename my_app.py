@@ -6,6 +6,7 @@ from rdkit.ML.Descriptors import MoleculeDescriptors
 from mordred import Calculator, descriptors
 import pandas as pd
 from autogluon.tabular import TabularPredictor
+from chemprop.train import make_predictions
 import numpy as np
 import gc
 import re
@@ -75,6 +76,45 @@ def load_predictor():
     """加载训练好的 AutoGluon 热容预测模型"""
     return TabularPredictor.load("./autogluon")  # ← 改成你的模型路径
 
+
+# ---------------- Chemprop 模型预测函数 ----------------
+def chemprop_predict(smiles_list):
+    """使用 Chemprop 图神经网络模型预测热容"""
+    try:
+        chemprop_dir = "./chemprop_model"
+        if not os.path.exists(chemprop_dir):
+            raise FileNotFoundError("Chemprop model folder not found. Please upload './chemprop_model/'.")
+
+        # 临时输入输出文件
+        temp_input = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+        pd.DataFrame({"smiles": smiles_list}).to_csv(temp_input.name, index=False)
+        temp_output = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+
+        # 调用 Chemprop 预测
+        args = [
+            "--test_path", temp_input.name,
+            "--checkpoint_dir", chemprop_dir,
+            "--preds_path", temp_output.name,
+            "--no_cuda" if not torch.cuda.is_available() else ""  # 自动切换 GPU / CPU
+        ]
+        args = [a for a in args if a != ""]  # 去除空参数
+
+        with st.spinner("Running Chemprop (GNN) prediction..."):
+            make_predictions(args=args)
+
+        preds = pd.read_csv(temp_output.name).iloc[:, -1].tolist()
+
+        os.remove(temp_input.name)
+        os.remove(temp_output.name)
+
+        return preds
+
+    except Exception as e:
+        raise RuntimeError(f"Chemprop prediction failed: {str(e)}")
+
+
+
+
 # ---------------- 分子绘图 ----------------
 def mol_to_image(mol, size=(300, 300)):
     d2d = MolDraw2DSVG(size[0], size[1])
@@ -138,26 +178,6 @@ def merge_features_without_duplicates(original_df, *feature_dfs):
     # 新增：把 list/ndarray 压成标量
     merged = merged.applymap(lambda x: float(np.mean(x)) if isinstance(x, (list, np.ndarray, tuple)) else float(x))
     return merged
-
-# ---------------- 主预测逻辑里构造输入 ----------------
-# 原来 3 行换成 1 行，保证每列都是 float
-# ---------- 计算描述符 ----------
-smiles_list = [smiles]
-rdkit_features = calc_rdkit_descriptors(smiles_list)
-mordred_features = calc_mordred_descriptors(smiles_list)
-
-# 1. 先合并（内部已把 list/ndarray 压成标量）
-merged_features = merge_features_without_duplicates(rdkit_features, mordred_features)
-
-# 2. 再切片
-# ---------- 预测 ----------
-data = merged_features.loc[:, required_descriptors]
-final_input = data.iloc[:1]
-
-# 🔧 压平
-final_input = final_input.applymap(
-    lambda x: float(np.mean(x)) if isinstance(x, (list, np.ndarray, tuple)) else float(x)
-)
 
 
 
@@ -240,6 +260,13 @@ if submit_button:
                     st.write("Prediction Results (Essential Models):")
                     results_df = pd.DataFrame(predictions_dict)
                     st.dataframe(results_df.iloc[:1,:])
+
+                    # ---------- Chemprop 预测 ----------
+                    try:
+                        chemprop_preds = chemprop_predict([smiles])
+                        st.success(f"**Chemprop (GNN) Predicted Cp:** {chemprop_preds[0]:.2f} J/(mol·K)")
+                    except Exception as chem_error:
+                        st.warning(str(chem_error))
                     
                     # 主动释放内存
                     del predictor
@@ -254,6 +281,7 @@ if submit_button:
             
 
                
+
 
 
 
