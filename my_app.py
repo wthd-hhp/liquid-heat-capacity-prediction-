@@ -15,6 +15,7 @@ import os
 import tempfile
 import torch
 from chemprop.args import PredictArgs
+from rdkit.Chem.Draw import rdMolDraw2D
 # ---------------- 页面样式 ----------------
 st.markdown(
     """
@@ -300,6 +301,7 @@ if submit_button:
             
 
                
+
 
 
 
