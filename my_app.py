@@ -77,8 +77,8 @@ def chemprop_predict(smiles_list):
             "--preds_path", temp_output.name,
         ])
 
-        if not torch.cuda.is_available():
-            args.no_cuda = True
+        # 若无 GPU，则强制禁用 CUDA
+        args.no_cuda = True
 
         make_predictions(args=args)
 
@@ -120,3 +120,4 @@ if submit_button:
 
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
+
