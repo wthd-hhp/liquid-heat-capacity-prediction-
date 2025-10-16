@@ -16,6 +16,8 @@ import tempfile
 import torch
 from chemprop.args import PredictArgs
 from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit.Chem.Draw.rdMolDraw2D import MolDraw2DSVG
+
 # ---------------- 页面样式 ----------------
 st.markdown(
     """
@@ -301,6 +303,7 @@ if submit_button:
             
 
                
+
 
 
 
