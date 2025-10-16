@@ -59,37 +59,49 @@ def mol_to_image(mol, size=(300, 300)):
 
 # ---------------- Chemprop 预测函数 ----------------
 def chemprop_predict(smiles_list):
-    """使用 Chemprop 模型进行热容预测"""
+    """使用 Chemprop 图神经网络模型预测热容"""
     try:
         model_dir = "./chemprop_model"
         if not os.path.exists(model_dir):
-            raise FileNotFoundError("❌ Chemprop model folder not found in './chemprop_model/'.")
+            raise FileNotFoundError("❌ Chemprop model folder not found. Please upload './chemprop_model/'.")
 
-        # 临时输入输出文件
-        temp_input = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
-        temp_output = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
-        pd.DataFrame({"smiles": smiles_list}).to_csv(temp_input.name, index=False)
+        # 创建临时输入输出文件
+        temp_input = os.path.join(tempfile.gettempdir(), "chemprop_input.csv")
+        temp_output = os.path.join(tempfile.gettempdir(), "chemprop_output.csv")
+        pd.DataFrame({"smiles": smiles_list}).to_csv(temp_input, index=False)
 
         # 构建 Chemprop 参数
         args = PredictArgs().parse_args([
-            "--test_path", temp_input.name,
+            "--test_path", temp_input,
             "--checkpoint_dir", model_dir,
-            "--preds_path", temp_output.name,
+            "--preds_path", temp_output,
         ])
 
-        # 若无 GPU，则强制禁用 CUDA
-        args.no_cuda = True
+        # 自动检测是否有GPU
+        if torch.cuda.is_available():
+            st.info("🚀 GPU detected — using CUDA for prediction.")
+            args.no_cuda = False
+        else:
+            st.warning("⚙️ No GPU available — switching to CPU mode.")
+            args.no_cuda = True
 
-        make_predictions(args=args)
+        # 🔧 关键修复：强制在CPU上安全加载模型
+        torch.load = lambda *args_, **kwargs_: torch.load(*args_, map_location="cpu", **kwargs_)
 
-        preds = pd.read_csv(temp_output.name).iloc[:, -1].tolist()
-        os.remove(temp_input.name)
-        os.remove(temp_output.name)
+        with st.spinner("🔬 Running Chemprop GNN prediction..."):
+            make_predictions(args=args)
+
+        preds = pd.read_csv(temp_output).iloc[:, -1].tolist()
+
+        # 清理临时文件
+        if os.path.exists(temp_input): os.remove(temp_input)
+        if os.path.exists(temp_output): os.remove(temp_output)
 
         return preds
 
     except Exception as e:
         raise RuntimeError(f"Chemprop prediction failed: {str(e)}")
+
 
 # ---------------- 主逻辑 ----------------
 if submit_button:
@@ -120,4 +132,5 @@ if submit_button:
 
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
+
 
